@@ -2,7 +2,8 @@ from moviepy.editor import *
 import reddit, screenshot, time, subprocess, random, configparser, sys, math
 from os import listdir
 from os.path import isfile, join
-from moviepy.video.VideoClip import TextClip
+from moviepy.video.VideoClip import TextClip, ColorClip
+from moviepy.video.compositing.concatenate import concatenate_videoclips
 
 def createVideo():
     config = configparser.ConfigParser()
@@ -35,13 +36,25 @@ def createVideo():
     def __createClip(text, audioClip, marginSize):
         textClip = TextClip(
             txt=text,
-            fontsize=24,
-            color='white'
+            fontsize=50,  # Increase the font size
+            color='black',  # Text color
+            bg_color='white',  # Background color
             ).set_position(("center", "center"))
         textClip = textClip.set_duration(audioClip.duration)
         textClip = textClip.resize(width=(w-marginSize))
-        videoClip = textClip.set_audio(audioClip)
-        videoClip.fps = 1
+
+        # Create a ColorClip of the same size as the TextClip
+        backgroundClip = ColorClip((textClip.w, textClip.h), col=[0, 0, 0]).set_duration(audioClip.duration)
+
+        # Concatenate the ColorClip and the TextClip
+        videoClip = concatenate_videoclips([backgroundClip, textClip])
+
+        # Set the start time of the text clip to be the same as the audio clip
+        videoClip = videoClip.set_start(audioClip.start)
+
+        # Add the audio to the video clip
+        videoClip = videoClip.set_audio(audioClip)
+
         return videoClip
 
     # Create video clips
