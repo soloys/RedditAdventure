@@ -34,14 +34,18 @@ def createVideo():
     w, h = backgroundVideo.size
 
     def __createClip(comment, audioClip, marginSize):
+        # Use a truetype font
+        fnt = ImageFont.truetype('Fonts\RobotoCondensed-Bold.ttf', 30)  # Increase the font size to 
+
+        # Calculate the size of the text box
+        text_width, text_height = fnt.getsize(comment)
+
         # Create a new image with white background
-        img = Image.new('RGB', (w, h), color = (255, 255, 255))
+        img = Image.new('RGB', (text_width + marginSize, text_height + marginSize), color = (255, 255, 255))
 
         d = ImageDraw.Draw(img)
-        # Use a truetype font
-        fnt = ImageFont.truetype('Fonts\OpenSans-Regular.ttf', 15)  # Replace with your font file path
         # Draw text, half down the image
-        d.text((10, h//2), comment, font=fnt, fill=(0, 0, 0))
+        d.text((marginSize // 2, marginSize // 2), comment, font=fnt, fill=(0, 0, 0))
 
         # Save the image
         img.save('comment.png')
@@ -50,7 +54,7 @@ def createVideo():
             'comment.png',
             duration=audioClip.duration
             ).set_position(("center", "center"))
-        imageClip = imageClip.resize(width=(w-marginSize))
+        imageClip = imageClip.resize(width=(text_width + marginSize))
         videoClip = imageClip.set_audio(audioClip)
         videoClip.fps = 1
         return videoClip
