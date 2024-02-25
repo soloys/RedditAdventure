@@ -4,6 +4,7 @@ from os import listdir
 from os.path import isfile, join
 from moviepy.editor import TextClip
 from PIL import Image, ImageDraw, ImageFont
+import textwrap
 
 def createVideo():
     config = configparser.ConfigParser()
@@ -35,17 +36,21 @@ def createVideo():
 
     def __createClip(comment, audioClip, marginSize):
         # Use a truetype font
-        fnt = ImageFont.truetype('Fonts\RobotoCondensed-Bold.ttf', 30)  # Increase the font size to 
+        fnt = ImageFont.truetype('Fonts\RobotoCondensed-Bold.ttf', 30)  # Increase the font size to 30
+
+        # Wrap the text
+        wrapper = textwrap.TextWrapper(width=40)  # Adjust the width to your needs
+        wrapped_text = wrapper.fill(text=comment)
 
         # Calculate the size of the text box
-        text_width, text_height = fnt.getsize(comment)
+        text_width, text_height = fnt.getsize_multiline(wrapped_text)
 
         # Create a new image with white background
         img = Image.new('RGB', (text_width + marginSize, text_height + marginSize), color = (255, 255, 255))
 
         d = ImageDraw.Draw(img)
         # Draw text, half down the image
-        d.text((marginSize // 2, marginSize // 2), comment, font=fnt, fill=(0, 0, 0))
+        d.multiline_text((marginSize // 2, marginSize // 2), wrapped_text, font=fnt, fill=(0, 0, 0))
 
         # Save the image
         img.save('comment.png')
