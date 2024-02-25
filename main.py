@@ -2,6 +2,7 @@ from moviepy.editor import *
 import reddit, screenshot, time, subprocess, random, configparser, sys, math
 from os import listdir
 from os.path import isfile, join
+from moviepy.video.VideoClip import TextClip
 
 def createVideo():
     config = configparser.ConfigParser()
@@ -19,8 +20,6 @@ def createVideo():
         script = reddit.getContent(outputDir, postOptionCount)
     fileName = script.getFileName()
 
-    # Create screenshots
-    screenshot.getPostScreenshots(fileName, script)
 
     # Setup background clip
     bgDir = config["General"]["BackgroundDirectory"]
@@ -33,13 +32,15 @@ def createVideo():
         audio=False).subclip(0, script.getDuration())
     w, h = backgroundVideo.size
 
-    def __createClip(screenShotFile, audioClip, marginSize):
-        imageClip = ImageClip(
-            screenShotFile,
-            duration=audioClip.duration
+    def __createClip(text, audioClip, marginSize):
+        textClip = TextClip(
+            txt=text,
+            fontsize=24,
+            color='white'
             ).set_position(("center", "center"))
-        imageClip = imageClip.resize(width=(w-marginSize))
-        videoClip = imageClip.set_audio(audioClip)
+        textClip = textClip.set_duration(audioClip.duration)
+        textClip = textClip.resize(width=(w-marginSize))
+        videoClip = textClip.set_audio(audioClip)
         videoClip.fps = 1
         return videoClip
 
@@ -47,9 +48,9 @@ def createVideo():
     print("Editing clips together...")
     clips = []
     marginSize = int(config["Video"]["MarginSize"])
-    clips.append(__createClip(script.titleSCFile, script.titleAudioClip, marginSize))
+    clips.append(__createClip(script.title, script.titleAudioClip, marginSize))
     for comment in script.frames:
-        clips.append(__createClip(comment.screenShotFile, comment.audioClip, marginSize))
+        clips.append(__createClip(comment.text, comment.audioClip, marginSize))
 
     # Merge clips into single track
     contentOverlay = concatenate_videoclips(clips).set_position(("center", "center"))
