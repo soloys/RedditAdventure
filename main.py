@@ -4,6 +4,7 @@ from os import listdir
 from os.path import isfile, join
 from moviepy.video.VideoClip import TextClip, ColorClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
+import numpy as np
 
 def createVideo():
     config = configparser.ConfigParser()
@@ -49,9 +50,6 @@ def createVideo():
         # Concatenate the ColorClip and the TextClip
         videoClip = concatenate_videoclips([backgroundClip, textClip])
 
-        # Set the start time of the text clip to be the same as the audio clip
-        videoClip = videoClip.set_start(audioClip.start)
-
         # Add the audio to the video clip
         videoClip = videoClip.set_audio(audioClip)
 
@@ -62,8 +60,10 @@ def createVideo():
     clips = []
     marginSize = int(config["Video"]["MarginSize"])
     clips.append(__createClip(script.title, script.titleAudioClip, marginSize))
+    audioClips = [script.titleAudioClip] # Create a list of audio clips
     for comment in script.frames:
         clips.append(__createClip(comment.text, comment.audioClip, marginSize))
+        audioClips.append(comment.audioClip) # Add each comment audio clip to the list
 
     # Merge clips into single track
     contentOverlay = concatenate_videoclips(clips).set_position(("center", "center"))
@@ -71,9 +71,16 @@ def createVideo():
     # Compose background/foreground
     final = CompositeVideoClip(
         clips=[backgroundVideo, contentOverlay], 
-        size=backgroundVideo.size).set_audio(contentOverlay.audio)
+        size=backgroundVideo.size)
+
+    # Create a composite audio clip from the list of audio clips
+    compositeAudio = CompositeAudioClip(audioClips)
+
+    # Set the audio of the final video clip to the composite audio clip
+    final = final.set_audio(compositeAudio)
     final.duration = script.getDuration()
     final.set_fps(backgroundVideo.fps)
+
 
     # Write output to file
     print("Rendering final video...")
