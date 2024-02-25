@@ -6,6 +6,8 @@ from moviepy.editor import TextClip
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 
+
+
 def createVideo():
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -31,12 +33,12 @@ def createVideo():
     bgIndex = random.randint(0, bgCount-1)
     backgroundVideo = VideoFileClip(
         filename=f"{bgDir}/{bgPrefix}{bgIndex}.mp4", 
-        audio=False).subclip(0, script.getDuration())
+        audio=False).loop(duration=script.getDuration())
     w, h = backgroundVideo.size
 
     def __createClip(comment, audioClip, marginSize):
         # Use a truetype font
-        fnt = ImageFont.truetype('Fonts\RobotoCondensed-Bold.ttf', 30)  # Increase the font size to 30
+        fnt = ImageFont.truetype('Fonts\RobotoCondensed-Bold.ttf', 40)  # Increase the font size to 30
 
         # Wrap the text
         wrapper = textwrap.TextWrapper(width=40)  # Adjust the width to your needs
