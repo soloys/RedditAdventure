@@ -3,6 +3,7 @@ import reddit, screenshot, time, subprocess, random, configparser, sys, math
 from os import listdir
 from os.path import isfile, join
 from moviepy.editor import TextClip
+from PIL import Image, ImageDraw, ImageFont
 
 def createVideo():
     config = configparser.ConfigParser()
@@ -32,9 +33,21 @@ def createVideo():
         audio=False).subclip(0, script.getDuration())
     w, h = backgroundVideo.size
 
-    def __createClip(screenShotFile, audioClip, marginSize):
+    def __createClip(comment, audioClip, marginSize):
+        # Create a new image with white background
+        img = Image.new('RGB', (w, h), color = (255, 255, 255))
+
+        d = ImageDraw.Draw(img)
+        # Use a truetype font
+        fnt = ImageFont.truetype('Fonts\OpenSans-Regular.ttf', 15)  # Replace with your font file path
+        # Draw text, half down the image
+        d.text((10, h//2), comment, font=fnt, fill=(0, 0, 0))
+
+        # Save the image
+        img.save('comment.png')
+
         imageClip = ImageClip(
-            screenShotFile,
+            'comment.png',
             duration=audioClip.duration
             ).set_position(("center", "center"))
         imageClip = imageClip.resize(width=(w-marginSize))
@@ -46,9 +59,9 @@ def createVideo():
     print("Editing clips together...")
     clips = []
     marginSize = int(config["Video"]["MarginSize"])
-    clips.append(__createClip(script.titleSCFile, script.titleAudioClip, marginSize))
+    clips.append(__createClip(script.title, script.titleAudioClip, marginSize))
     for comment in script.frames:
-        clips.append(__createClip(comment.screenShotFile, comment.audioClip, marginSize))
+        clips.append(__createClip(comment.text, comment.audioClip, marginSize))
 
     # Merge clips into single track
     contentOverlay = concatenate_videoclips(clips).set_position(("center", "center"))
